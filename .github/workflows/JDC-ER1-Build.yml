@@ -1,5 +1,5 @@
 # 京东云 ER1 (RE-CS-07) 专用编译 - 高通 IPQ60XX 平台
-# 基于 VIKINGYFY/immortalwrt 高通专用源码
+# 系统功能完整保留，仅精简 LuCI 插件
 
 name: JDC-ER1-Build
 
@@ -66,7 +66,6 @@ jobs:
             https://github.com/VIKINGYFY/immortalwrt.git ./wrt/
           cd ./wrt/
           echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
-          # 移除国内镜像源
           if [ -f "./scripts/projectsmirrors.json" ]; then
             sed -i '/.cn\//d; /tencent/d; /aliyun/d' "./scripts/projectsmirrors.json"
           fi
@@ -101,9 +100,9 @@ jobs:
         run: |
           cd ./wrt/
           
-          # 基础平台配置 - 京东云 ER1
+          # ==================== 完整系统配置 ====================
           cat > .config << 'EOF'
-          # 目标平台 - 高通 IPQ60XX
+          # ========== 目标平台 - 高通 IPQ60XX ==========
           CONFIG_TARGET_qualcommax=y
           CONFIG_TARGET_qualcommax_ipq60xx=y
           CONFIG_TARGET_qualcommax_ipq60xx_DEVICE_jdcloud_re-cs-07=y
@@ -112,91 +111,99 @@ jobs:
           CONFIG_TARGET_ROOTFS_INITRAMFS=n
           CONFIG_TARGET_ROOTFS_SQUASHFS=y
           
-          # 开发选项
+          # ========== 开发选项 ==========
           CONFIG_CCACHE=y
           CONFIG_DEVEL=y
           
-          # ==================== 科学上网 - 精简版：只保留 Passwall ====================
+          # ========== 科学上网插件 - 仅保留 Passwall ==========
           CONFIG_PACKAGE_luci-app-passwall=y
           CONFIG_PACKAGE_luci-app-passwall_INCLUDE_SingBox=y
           CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Xray=y
           CONFIG_PACKAGE_sing-box=y
           CONFIG_PACKAGE_xray-core=y
           
-          # [后续再加] HomeProxy - 暂不启用
+          # [后续再加] 其他科学上网插件
           # CONFIG_PACKAGE_luci-app-homeproxy=y
-          
-          # [后续再加] OpenClash - 暂不启用（占用空间大）
           # CONFIG_PACKAGE_luci-app-openclash=y
-          
-          # [后续再加] SSR-Plus - 暂不启用（与Passwall功能重复）
           # CONFIG_PACKAGE_luci-app-ssr-plus=y
-          
-          # [后续再加] 其他代理组件
           # CONFIG_PACKAGE_hysteria=y
           # CONFIG_PACKAGE_naiveproxy=y
           # CONFIG_PACKAGE_tuic-client=y
           # CONFIG_PACKAGE_shadowsocks-rust-sslocal=y
           # CONFIG_PACKAGE_shadowsocks-rust-ssserver=y
           
-          # ==================== 网络工具 - 精简版 ====================
+          # ========== LuCI 插件 - 精简版 ==========
           CONFIG_PACKAGE_luci-app-ddns=y
           CONFIG_PACKAGE_luci-app-upnp=y
           CONFIG_PACKAGE_luci-app-sqm=y
-          CONFIG_PACKAGE_sqm-scripts-nss=y
           CONFIG_PACKAGE_luci-app-ttyd=y
           
-          # [后续再加] Tailscale
+          # [后续再加] 其他插件
           # CONFIG_PACKAGE_luci-app-tailscale=y
-          
-          # ==================== 系统工具 - 精简版 ====================
-          CONFIG_PACKAGE_luci-app-autoreboot=y
-          
-          # [后续再加] 文件管理（占用较大）
+          # CONFIG_PACKAGE_luci-app-autoreboot=y
           # CONFIG_PACKAGE_luci-app-filebrowser=y
           # CONFIG_PACKAGE_luci-app-samba4=y
           # CONFIG_PACKAGE_luci-app-acme=y
           # CONFIG_PACKAGE_luci-app-wol=y
           
-          # ==================== 主题 - 精简版：只保留一个 ====================
+          # ========== 主题 ==========
           CONFIG_PACKAGE_luci-theme-argon=y
-          
-          # [后续再加] 
           # CONFIG_PACKAGE_luci-theme-aurora=y
           
-          # ==================== 高通 NSS 优化 ====================
+          # ========== 高通 NSS 优化 - 完整保留 ==========
           CONFIG_FEED_nss_packages=n
           CONFIG_FEED_sqm_scripts_nss=n
+          CONFIG_PACKAGE_sqm-scripts-nss=y
           CONFIG_NSS_FIRMWARE_VERSION_11_4=n
           CONFIG_NSS_FIRMWARE_VERSION_12_5=y
           CONFIG_PACKAGE_kmod-usb-serial-qualcomm=y
           
-          # ==================== USB 支持 - 精简版 ====================
+          # ========== USB 支持 - 完整保留 ==========
           CONFIG_PACKAGE_kmod-usb3=y
+          CONFIG_PACKAGE_kmod-usb-dwc3=y
+          CONFIG_PACKAGE_kmod-usb-core=y
+          CONFIG_PACKAGE_kmod-usb-net=y
+          CONFIG_PACKAGE_kmod-usb-net-rtl8152=y
+          CONFIG_PACKAGE_kmod-usb-storage=y
+          CONFIG_PACKAGE_kmod-usb-storage-uas=y
           
-          # [后续再加] USB网卡驱动（如需要）
-          # CONFIG_PACKAGE_kmod-usb-net-rtl8152=y
-          # CONFIG_PACKAGE_kmod-usb-storage=y
+          # ========== 内核模块 - 完整保留 ==========
+          CONFIG_PACKAGE_kmod-bonding=y
+          CONFIG_PACKAGE_kmod-dsa=y
+          CONFIG_PACKAGE_kmod-fs-btrfs=y
+          CONFIG_PACKAGE_kmod-fuse=y
+          CONFIG_PACKAGE_kmod-inet-diag=y
+          CONFIG_PACKAGE_kmod-netlink-diag=y
+          CONFIG_PACKAGE_kmod-nft-core=y
+          CONFIG_PACKAGE_kmod-nft-nat=y
+          CONFIG_PACKAGE_kmod-nft-offload=y
+          CONFIG_PACKAGE_kmod-tun=y
+          CONFIG_PACKAGE_kmod-veth=y
+          CONFIG_PACKAGE_kmod-wireguard=y
+          CONFIG_PACKAGE_kmod-mtd-rw=y
           
-          # ==================== 基础组件 - 精简版 ====================
+          # ========== 基础组件 - 完整保留 ==========
           CONFIG_PACKAGE_autocore=y
+          CONFIG_PACKAGE_automount=y
           CONFIG_PACKAGE_htop=y
-          
-          # [后续再加] 
-          # CONFIG_PACKAGE_automount=y
-          # CONFIG_PACKAGE_iperf3=y
-          # CONFIG_PACKAGE_openssh-sftp-server=y
           CONFIG_PACKAGE_iperf3=y
           CONFIG_PACKAGE_openssh-sftp-server=y
+          CONFIG_PACKAGE_curl=y
+          CONFIG_PACKAGE_lsblk=y
+          CONFIG_PACKAGE_usbutils=y
           
-          # ==================== Luci 基础 ====================
+          # ========== Luci 基础 - 完整保留 ==========
           CONFIG_PACKAGE_luci=y
           CONFIG_PACKAGE_luci-base=y
+          CONFIG_PACKAGE_luci-compat=y
+          CONFIG_PACKAGE_luci-lib-base=y
+          CONFIG_PACKAGE_luci-lib-ipkg=y
+          CONFIG_PACKAGE_luci-lua-runtime=y
           CONFIG_LUCI_LANG_zh_Hans=y
           EOF
           
           # 修改默认设置
-          sed -i 's/luci-theme-bootstrap/luci-theme-aurora/g' $(find ./feeds/luci/collections/ -type f -name "Makefile")
+          sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' $(find ./feeds/luci/collections/ -type f -name "Makefile")
           sed -i 's/192\.168\.[0-9]*\.[0-9]*/192.168.10.1/g' ./package/base-files/files/bin/config_generate
           sed -i "s/hostname='.*'/hostname='JDC-ER1'/g" ./package/base-files/files/bin/config_generate
           
@@ -224,17 +231,11 @@ jobs:
         run: |
           cd ./wrt/
           mkdir -p ./upload/
-          
-          # 复制固件（只保留 JDC-ER1 相关）
           find bin/targets/qualcommax/ipq60xx -type f \( \
             -name "*jdcloud*re-cs-07*" -o \
             -name "*qualcommax*ipq60xx*" \
           \) -exec cp {} ./upload/ \;
-          
-          # 复制配置文件
           cp .config ./upload/config.txt
-          
-          # 显示结果
           ls -lh ./upload/
 
       # ==================== 上传固件 ====================
@@ -255,7 +256,7 @@ jobs:
           name: JDC-ER1 ${{env.WRT_DATE}}
           files: ./wrt/upload/*
           body: |
-            ## 京东云 ER1 (RE-CS-07) 专用固件
+            ## 京东云 ER1 (RE-CS-07) 专用固件 - 精简版
             
             **设备**: 京东云 ER1 (RE-CS-07)  
             **平台**: 高通 IPQ60XX  
@@ -266,15 +267,16 @@ jobs:
             **默认配置**:
             - IP: 192.168.10.1
             - 主机名: JDC-ER1
-            - 主题: Aurora
+            - 主题: Argon
             
-            **包含插件**:
-            - HomeProxy / Passwall / OpenClash / SSR-Plus
-            - SQM NSS 硬件加速
-            - Tailscale / Samba4 / DDNS
-            - TTYD / Filebrowser
+            **包含插件（精简版）**:
+            - ✅ Passwall (sing-box + xray)
+            - ✅ DDNS / UPnP / SQM QoS / TTYD
+            - ✅ NSS 硬件加速
+            - ❌ OpenClash / HomeProxy / SSR-Plus (后续再加)
+            - ❌ Samba4 / Filebrowser (后续再加)
             
-            **注意**: 此固件专用于 JDC-ER1，请勿刷入其他设备！
+            **注意**: 此固件专用于 JDC-ER1，系统功能完整，仅精简了部分插件！
 
       # ==================== 仅测试配置 ====================
       - name: Test Config Only
@@ -283,5 +285,7 @@ jobs:
           cd ./wrt/
           echo "===== 设备配置 ====="
           cat .config | grep "CONFIG_TARGET.*DEVICE"
-          echo "===== 科学上网插件 ====="
-          cat .config | grep -E "(homeproxy|passwall|openclash|sing-box)"
+          echo "===== 已启用插件 ====="
+          cat .config | grep "CONFIG_PACKAGE_luci-app.*=y"
+          echo "===== 已注释插件 ====="
+          cat .config | grep "# CONFIG_PACKAGE_luci-app"

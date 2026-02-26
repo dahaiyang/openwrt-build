@@ -1,0 +1,325 @@
+# 京东云 ER1 (RE-CS-07) - IPQ60XX 高通平台专用配置
+# 设备信息：高通 IPQ6000/6010, 256MB NAND, 512MB RAM
+# 基于 VIKINGYFY 源码 + 用户自定义插件
+
+# ==================== 基础平台配置 ====================
+CONFIG_TARGET_qualcommax=y
+CONFIG_TARGET_qualcommax_ipq60xx=y
+CONFIG_TARGET_qualcommax_ipq60xx_DEVICE_jdcloud_re-cs-07=y
+
+# 多 profile 支持
+CONFIG_TARGET_MULTI_PROFILE=n
+CONFIG_TARGET_PER_DEVICE_ROOTFS=y
+CONFIG_TARGET_ROOTFS_INITRAMFS=n
+
+# ==================== 开发选项 ====================
+CONFIG_CCACHE=y
+CONFIG_DEVEL=y
+CONFIG_TOOLCHAINOPTS=y
+
+# ==================== 根文件系统 ====================
+CONFIG_TARGET_ROOTFS_SQUASHFS=y
+CONFIG_TARGET_SQUASHFS_BLOCK_SIZE=256
+
+# ==================== 科学上网插件 - 全部启用 ====================
+# HomeProxy
+CONFIG_PACKAGE_luci-app-homeproxy=y
+CONFIG_PACKAGE_luci-i18n-homeproxy-zh-cn=y
+
+# Passwall 及其组件
+CONFIG_PACKAGE_luci-app-passwall=y
+CONFIG_PACKAGE_luci-i18n-passwall-zh-cn=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Haproxy=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Hysteria=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_NaiveProxy=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Shadowsocks_Rust_Client=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Shadowsocks_Rust_Server=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Simple_Obfs=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_SingBox=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_V2ray_Geodata=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_V2ray_Geoview=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_V2ray_Plugin=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Xray=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_tuic_client=y
+
+# OpenClash
+CONFIG_PACKAGE_luci-app-openclash=y
+
+# SSR-Plus
+CONFIG_PACKAGE_luci-app-ssr-plus=y
+CONFIG_PACKAGE_luci-i18n-ssr-plus-zh-cn=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_ChinaDNS_NG=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_DNS2SOCKS=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Hysteria=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_MosDNS=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_NaiveProxy=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_ShadowsocksR_Libev_Client=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Shadowsocks_Rust_Client=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Shadowsocks_Rust_Server=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Shadowsocks_Simple_Obfs=y
+CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Xray=y
+CONFIG_PACKAGE_luci-app-ssr-plus_Nftables_Transparent_Proxy=y
+
+# 科学上网核心组件
+CONFIG_PACKAGE_sing-box=y
+CONFIG_PACKAGE_xray-core=y
+CONFIG_PACKAGE_v2ray-plugin=y
+CONFIG_PACKAGE_v2ray-geoip=y
+CONFIG_PACKAGE_v2ray-geosite=y
+CONFIG_PACKAGE_hysteria=y
+CONFIG_PACKAGE_naiveproxy=y
+CONFIG_PACKAGE_tuic-client=y
+CONFIG_PACKAGE_shadowsocks-rust-sslocal=y
+CONFIG_PACKAGE_shadowsocks-rust-ssserver=y
+CONFIG_PACKAGE_shadowsocksr-libev-ssr-check=y
+CONFIG_PACKAGE_shadowsocksr-libev-ssr-local=y
+CONFIG_PACKAGE_shadowsocksr-libev-ssr-redir=y
+
+# ==================== 网络工具插件 ====================
+# DDNS
+CONFIG_PACKAGE_luci-app-ddns=y
+CONFIG_PACKAGE_luci-i18n-ddns-zh-cn=y
+
+# 防火墙
+CONFIG_PACKAGE_luci-app-firewall=y
+
+# UPnP
+CONFIG_PACKAGE_luci-app-upnp=y
+CONFIG_PACKAGE_luci-i18n-upnp-zh-cn=y
+
+# SQM QoS
+CONFIG_PACKAGE_luci-app-sqm=y
+CONFIG_PACKAGE_luci-i18n-sqm-zh-cn=y
+CONFIG_PACKAGE_sqm-scripts-nss=y
+
+# Tailscale
+CONFIG_PACKAGE_luci-app-tailscale-community=y
+
+# TTYD 终端
+CONFIG_PACKAGE_luci-app-ttyd=y
+CONFIG_PACKAGE_luci-i18n-ttyd-zh-cn=y
+
+# WOL 网络唤醒
+CONFIG_PACKAGE_luci-app-wol=y
+CONFIG_PACKAGE_luci-i18n-wol-zh-cn=y
+
+# ACME 证书
+CONFIG_PACKAGE_luci-app-acme=y
+
+# Cloudflared
+CONFIG_PACKAGE_luci-app-cloudflared=y
+
+# FRP 内网穿透
+CONFIG_PACKAGE_luci-app-frpc=y
+
+# Gost 代理
+CONFIG_PACKAGE_luci-app-gost=y
+
+# ==================== 系统管理插件 ====================
+# 自动重启
+CONFIG_PACKAGE_luci-app-autoreboot=y
+CONFIG_PACKAGE_luci-i18n-autoreboot-zh-cn=y
+
+# 高级重启
+CONFIG_PACKAGE_luci-app-advanced-reboot=y
+
+# 释放内存
+CONFIG_PACKAGE_luci-app-ramfree=y
+
+# 文件浏览器
+CONFIG_PACKAGE_luci-app-filebrowser=y
+
+# 软件包管理
+CONFIG_PACKAGE_luci-app-package-manager=y
+
+# UHTTPD 设置
+CONFIG_PACKAGE_luci-app-uhttpd=y
+
+# ==================== 存储与打印 ====================
+# Samba4 文件共享
+CONFIG_PACKAGE_luci-app-samba4=y
+CONFIG_PACKAGE_luci-i18n-samba4-zh-cn=y
+
+# USB 打印
+CONFIG_PACKAGE_luci-app-usb-printer=y
+
+# Rclone 云存储
+CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-ng=y
+CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-webui=y
+
+# ==================== 广告与解锁 ====================
+# Adblock
+CONFIG_PACKAGE_luci-app-adblock=y
+
+# 解锁网易云音乐
+CONFIG_PACKAGE_luci-app-unblockneteasemusic=y
+
+# KMS 激活
+CONFIG_PACKAGE_luci-app-vlmcsd=y
+
+# ==================== 分区与扩容 ====================
+CONFIG_PACKAGE_luci-app-partexp=y
+
+# Gecoos AC 控制器
+CONFIG_PACKAGE_luci-app-gecoosac=y
+
+# 网速测试
+CONFIG_PACKAGE_luci-app-netspeedtest=y
+
+# ==================== 删除不需要的插件 ====================
+CONFIG_PACKAGE_luci-app-attendedsysupgrade=n
+
+# ==================== 主题配置 ====================
+CONFIG_PACKAGE_luci-theme-argon=y
+CONFIG_PACKAGE_luci-theme-aurora=y
+CONFIG_PACKAGE_luci-app-argon-config=y
+CONFIG_PACKAGE_luci-app-aurora-config=y
+
+# ==================== 内核模块 - 网络 ====================
+CONFIG_PACKAGE_kmod-bonding=y
+CONFIG_PACKAGE_kmod-dsa=y
+CONFIG_PACKAGE_kmod-inet-diag=y
+CONFIG_PACKAGE_kmod-inet-mptcp-diag=y
+CONFIG_PACKAGE_kmod-netlink-diag=y
+CONFIG_PACKAGE_kmod-tun=y
+CONFIG_PACKAGE_kmod-veth=y
+CONFIG_PACKAGE_kmod-wireguard=y
+
+# ==================== 内核模块 - NFT ====================
+CONFIG_PACKAGE_kmod-nft-arp=y
+CONFIG_PACKAGE_kmod-nft-bridge=y
+CONFIG_PACKAGE_kmod-nft-connlimit=y
+CONFIG_PACKAGE_kmod-nft-core=y
+CONFIG_PACKAGE_kmod-nft-dup-inet=y
+CONFIG_PACKAGE_kmod-nft-fib=y
+CONFIG_PACKAGE_kmod-nft-fullcone=y
+CONFIG_PACKAGE_kmod-nft-nat=y
+CONFIG_PACKAGE_kmod-nft-netdev=y
+CONFIG_PACKAGE_kmod-nft-offload=y
+CONFIG_PACKAGE_kmod-nft-queue=y
+CONFIG_PACKAGE_kmod-nft-socket=y
+CONFIG_PACKAGE_kmod-nft-tproxy=y
+CONFIG_PACKAGE_kmod-nft-xfrm=y
+
+# ==================== 内核模块 - USB ====================
+CONFIG_PACKAGE_kmod-usb3=y
+CONFIG_PACKAGE_kmod-usb-core=y
+CONFIG_PACKAGE_kmod-usb-dwc3=y
+CONFIG_PACKAGE_kmod-usb-ohci=y
+CONFIG_PACKAGE_kmod-usb-uhci=y
+CONFIG_PACKAGE_kmod-usb-xhci=y
+
+# ==================== 内核模块 - USB 网络 ====================
+CONFIG_PACKAGE_kmod-usb-net=y
+CONFIG_PACKAGE_kmod-usb-net-asix=y
+CONFIG_PACKAGE_kmod-usb-net-asix-ax88179=y
+CONFIG_PACKAGE_kmod-usb-net-cdc-eem=y
+CONFIG_PACKAGE_kmod-usb-net-cdc-ether=y
+CONFIG_PACKAGE_kmod-usb-net-cdc-mbim=y
+CONFIG_PACKAGE_kmod-usb-net-cdc-ncm=y
+CONFIG_PACKAGE_kmod-usb-net-cdc-subset=y
+CONFIG_PACKAGE_kmod-usb-net-huawei-cdc-ncm=y
+CONFIG_PACKAGE_kmod-usb-net-ipheth=y
+CONFIG_PACKAGE_kmod-usb-net-qmi-wwan=y
+CONFIG_PACKAGE_kmod-usb-net-qmi-wwan-fibocom=y
+CONFIG_PACKAGE_kmod-usb-net-qmi-wwan-quectel=y
+CONFIG_PACKAGE_kmod-usb-net-rndis=y
+CONFIG_PACKAGE_kmod-usb-net-rtl8150=y
+CONFIG_PACKAGE_kmod-usb-net-rtl8152=y
+CONFIG_PACKAGE_kmod-usb-net-sierrawireless=y
+
+# ==================== 内核模块 - USB 存储 ====================
+CONFIG_PACKAGE_kmod-usb-storage=y
+CONFIG_PACKAGE_kmod-usb-storage-extras=y
+CONFIG_PACKAGE_kmod-usb-storage-uas=y
+
+# ==================== 内核模块 - 文件系统 ====================
+CONFIG_PACKAGE_kmod-fs-btrfs=y
+CONFIG_PACKAGE_kmod-fuse=y
+
+# ==================== 内核模块 - 其他 ====================
+CONFIG_PACKAGE_kmod-mtd-rw=y
+CONFIG_PACKAGE_kmod-sound-core=y
+CONFIG_PACKAGE_kmod-usb-audio=y
+
+# ==================== 高通 NSS 相关 ====================
+# 取消 NSS feed（VIKINGYFY 源码已内置）
+CONFIG_FEED_nss_packages=n
+CONFIG_FEED_sqm_scripts_nss=n
+
+# NSS 固件版本
+CONFIG_NSS_FIRMWARE_VERSION_11_4=n
+CONFIG_NSS_FIRMWARE_VERSION_12_5=y
+
+# 高通 USB 串口
+CONFIG_PACKAGE_kmod-usb-serial-qualcomm=y
+
+# ==================== 基础组件 ====================
+CONFIG_PACKAGE_autocore=y
+CONFIG_PACKAGE_automount=y
+CONFIG_PACKAGE_blkid=y
+CONFIG_PACKAGE_cfdisk=y
+CONFIG_PACKAGE_cgdisk=y
+CONFIG_PACKAGE_coremark=y
+CONFIG_PACKAGE_cpufreq=y
+CONFIG_PACKAGE_curl=y
+CONFIG_PACKAGE_dmesg=y
+CONFIG_PACKAGE_fdisk=y
+CONFIG_PACKAGE_gdisk=y
+CONFIG_PACKAGE_htop=y
+CONFIG_PACKAGE_iperf3=y
+CONFIG_PACKAGE_ip-full=y
+CONFIG_PACKAGE_lsblk=y
+CONFIG_PACKAGE_mmc-utils=y
+CONFIG_PACKAGE_nand-utils=y
+CONFIG_PACKAGE_openssh-keygen=y
+CONFIG_PACKAGE_openssh-sftp-server=y
+CONFIG_PACKAGE_openssl-util=y
+CONFIG_PACKAGE_proto-bonding=y
+CONFIG_PACKAGE_sfdisk=y
+CONFIG_PACKAGE_sgdisk=y
+CONFIG_PACKAGE_usb-modeswitch=y
+CONFIG_PACKAGE_usbutils=y
+CONFIG_PACKAGE_xz-utils=y
+
+# ==================== Luci 基础 ====================
+CONFIG_PACKAGE_luci=y
+CONFIG_PACKAGE_luci-base=y
+CONFIG_PACKAGE_luci-compat=y
+CONFIG_PACKAGE_luci-lib-base=y
+CONFIG_PACKAGE_luci-lib-ipkg=y
+CONFIG_PACKAGE_luci-lua-runtime=y
+CONFIG_PACKAGE_luci-proto-relay=y
+CONFIG_LUCI_LANG_zh_Hans=y
+
+# ==================== 网络工具 ====================
+CONFIG_PACKAGE_iptables-nft=y
+CONFIG_PACKAGE_ip6tables-nft=y
+CONFIG_PACKAGE_dnsmasq-full=y
+CONFIG_PACKAGE_dnsmasq=n
+CONFIG_PACKAGE_wpad-basic-mbedtls=n
+CONFIG_PACKAGE_wpad-mbedtls=y
+
+# ==================== 京东云 ER1 特有 ====================
+# 确保包含 EMMC/NAND 支持
+CONFIG_PACKAGE_kmod-mtd-rw=y
+
+# 温度监控
+CONFIG_PACKAGE_lm-sensors=y
+CONFIG_PACKAGE_lm-sensors-detect=y
+
+# ==================== 默认不启用 WiFi (ER1 无 WiFi) ====================
+# ER1 是路由器，没有无线功能，不需要 WiFi 驱动
+CONFIG_PACKAGE_kmod-ath11k=n
+CONFIG_PACKAGE_kmod-ath11k-ahb=n
+CONFIG_PACKAGE_kmod-ath11k-pci=n
+CONFIG_PACKAGE_ath11k-firmware-ipq6018=n
+CONFIG_PACKAGE_ath11k-firmware-ipq8074=n
+
+# ==================== 减少固件大小 ====================
+# 不编译 debug 信息
+CONFIG_STRIP_KERNEL_EXPORTS=y
+CONFIG_USE_MKLIBS=y
+
+# 不启用 IPv6（可选，如需 IPv6 请注释掉）
+# CONFIG_IPV6=n

@@ -1,0 +1,307 @@
+# 京东云 ER1 (RE-CS-07) 云编译工作流
+# 基于 VIKINGYFY/OpenWRT-CI 框架
+# 设备：高通 IPQ60XX 平台，无 WiFi
+
+name: JDC-ER1-Build
+
+# ==================== 触发条件 ====================
+on:
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      BRANCH:
+        description: '源码分支'
+        default: 'main'
+        required: true
+        type: string
+      TEST:
+        description: '仅生成配置文件，不编译'
+        default: false
+        required: true
+        type: boolean
+  
+  # 定时编译（可选，每天早上4点）
+  # schedule:
+  #   - cron: '0 20 * * *'  # UTC 20:00 = 北京时间 4:00
+
+# ==================== 权限 ====================
+permissions: write-all
+
+# ==================== 编译任务 ====================
+jobs:
+  build:
+    name: JDC-ER1-Qualcommax
+    runs-on: ubuntu-latest
+    
+    steps:
+      # ==================== 检出项目 ====================
+      - name: Checkout Projects
+        uses: actions/checkout@main
+
+      # ==================== 最大化磁盘空间 ====================
+      - name: Maximize Build Space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 512
+          swap-size-mb: 4096
+          build-mount-path: '/mnt/build_wrt'
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+
+      # ==================== 初始化环境 ====================
+      - name: Initialization Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # 清理磁盘空间
+          sudo -E apt -yqq purge firefox google-chrome-stable microsoft-edge-stable
+          sudo -E apt -yqq update
+          sudo -E apt -yqq full-upgrade
+          sudo -E apt -yqq autoremove --purge
+          sudo -E apt -yqq autoclean
+          sudo -E apt -yqq clean
+          sudo -E apt -yqq install dos2unix python3-netifaces libfuse-dev
+          
+          # 安装 ImmortalWrt 编译环境
+          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          
+          sudo -E systemctl daemon-reload
+          sudo -E timedatectl set-timezone "Asia/Shanghai"
+          
+          # 创建构建目录
+          sudo mkdir -p /mnt/build_wrt
+          sudo chown $USER:$USER /mnt/build_wrt
+          sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/wrt
+          
+          # 显示空间信息
+          echo "=== 磁盘空间 ==="
+          df -h
+          echo "=== 内存信息 ==="
+          free -h
+
+      # ==================== 设置变量 ====================
+      - name: Initialization Values
+        run: |
+          echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
+          echo "WRT_MARK=${GITHUB_REPOSITORY%%/*}" >> $GITHUB_ENV
+          echo "WRT_TARGET=qualcommax" >> $GITHUB_ENV
+          echo "WRT_KVER=none" >> $GITHUB_ENV
+          echo "WRT_HASH=none" >> $GITHUB_ENV
+
+      # ==================== 克隆源码 ====================
+      - name: Clone Code
+        run: |
+          # 使用 VIKINGYFY 的高通专用源码
+          git clone --depth=1 --single-branch --branch ${{ github.event.inputs.BRANCH || 'main' }} https://github.com/VIKINGYFY/immortalwrt.git ./wrt/
+          
+          cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+          
+          # 移除国内镜像源（GitHub Action 环境不需要）
+          PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
+          if [ -f "$PROJECT_MIRRORS_FILE" ]; then
+            sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
+          fi
+
+      # ==================== 处理脚本 ====================
+      - name: Check Scripts
+        run: |
+          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+
+      # ==================== 缓存检查 ====================
+      - name: Check Caches
+        id: check-cache
+        if: ${{ github.event.inputs.TEST != 'true' }}
+        uses: actions/cache@main
+        with:
+          key: JDC-ER1-${{ env.WRT_HASH }}
+          restore-keys: JDC-ER1-
+          path: |
+            ./wrt/.ccache
+            ./wrt/staging_dir/host*
+            ./wrt/staging_dir/tool*
+
+      # ==================== 更新缓存 ====================
+      - name: Update Caches
+        if: ${{ github.event.inputs.TEST != 'true' }}
+        run: |
+          if [ -d "./wrt/staging_dir" ]; then
+            find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
+              find "$DIR" -type f -exec touch {} +
+            done
+            mkdir -p ./wrt/tmp && echo "1" > ./wrt/tmp/.build
+            echo "toolchain skiped done!"
+          else
+            echo "caches missed!"
+          fi
+
+      # ==================== 更新 Feeds ====================
+      - name: Update Feeds
+        run: |
+          cd ./wrt/
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      # ==================== 自定义设置 ====================
+      - name: Custom Settings
+        run: |
+          cd ./wrt/
+          
+          # 复制配置文件
+          cp $GITHUB_WORKSPACE/JDC-ER1-Qualcommax.txt .config
+          
+          # 修改默认主题
+          sed -i "s/luci-theme-bootstrap/luci-theme-aurora/g" $(find ./feeds/luci/collections/ -type f -name "Makefile")
+          
+          # 修改默认 IP 地址
+          sed -i "s/192\.168\.[0-9]*\.[0-9]*/192.168.10.1/g" $(find ./feeds/luci/modules/luci-mod-system/ -type f -name "flash.js")
+          
+          # 修改默认主机名
+          sed -i "s/hostname='.*'/hostname='JDC-ER1'/g" ./package/base-files/files/bin/config_generate
+          
+          # 修改默认 IP
+          sed -i "s/192\.168\.[0-9]*\.[0-9]*/192.168.10.1/g" ./package/base-files/files/bin/config_generate
+          
+          # 添加编译日期标识
+          sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ ${{ env.WRT_MARK }}-${{ env.WRT_DATE }}')/g" $(find ./feeds/luci/modules/luci-mod-status/ -type f -name "10_system.js")
+          
+          # 高通平台 NSS 调整
+          echo "CONFIG_FEED_nss_packages=n" >> ./.config
+          echo "CONFIG_FEED_sqm_scripts_nss=n" >> ./.config
+          echo "CONFIG_PACKAGE_luci-app-sqm=y" >> ./.config
+          echo "CONFIG_PACKAGE_sqm-scripts-nss=y" >> ./.config
+          echo "CONFIG_NSS_FIRMWARE_VERSION_11_4=n" >> ./.config
+          echo "CONFIG_NSS_FIRMWARE_VERSION_12_5=y" >> ./.config
+          echo "CONFIG_PACKAGE_kmod-usb-serial-qualcomm=y" >> ./.config
+          
+          # 生成完整配置
+          make defconfig -j$(nproc)
+          
+          # 清理
+          make clean -j$(nproc)
+
+      # ==================== 下载包 ====================
+      - name: Download Packages
+        if: ${{ github.event.inputs.TEST != 'true' }}
+        run: |
+          cd ./wrt/
+          make download -j$(nproc)
+
+      # ==================== 编译固件 ====================
+      - name: Compile Firmware
+        if: ${{ github.event.inputs.TEST != 'true' }}
+        timeout-minutes: 360  # 6小时超时
+        run: |
+          cd ./wrt/
+          
+          # 先尝试并行编译（减少并行度避免OOM）
+          make -j2 || {
+            echo "Parallel build failed, trying single thread..."
+            # 如果失败，单线程显示详细错误
+            make -j1 V=s
+          }
+
+      # ==================== 机器信息 ====================
+      - name: Machine Information
+        if: ${{ github.event.inputs.TEST != 'true' }}
+        run: |
+          cd ./wrt/
+          echo "======================="
+          lscpu | grep -E "name|Core|Thread"
+          echo "======================="
+          df -h
+          echo "======================="
+          du -h --max-depth=1
+          echo "======================="
+
+      # ==================== 整理固件 ====================
+      - name: Organize Firmware
+        if: ${{ github.event.inputs.TEST != 'true' }}
+        run: |
+          cd ./wrt/
+          
+          # 创建输出目录
+          mkdir -p $GITHUB_WORKSPACE/firmware
+          
+          # 复制固件文件
+          find bin/targets/qualcommax/ipq60xx -type f \( \
+            -name "*jdcloud*re-cs-07*" -o \
+            -name "*qualcommax*" \
+          \) -exec cp {} $GITHUB_WORKSPACE/firmware/ \;
+          
+          # 复制配置文件
+          cp .config $GITHUB_WORKSPACE/firmware/config.txt
+          
+          # 生成固件信息
+          echo "Build Date: ${{ env.WRT_DATE }}" > $GITHUB_WORKSPACE/firmware/info.txt
+          echo "Source: VIKINGYFY/immortalwrt" >> $GITHUB_WORKSPACE/firmware/info.txt
+          echo "Branch: ${{ github.event.inputs.BRANCH || 'main' }}" >> $GITHUB_WORKSPACE/firmware/info.txt
+          echo "Commit: ${{ env.WRT_HASH }}" >> $GITHUB_WORKSPACE/firmware/info.txt
+          echo "Target: qualcommax/ipq60xx" >> $GITHUB_WORKSPACE/firmware/info.txt
+          echo "Device: JDCloud RE-CS-07 (ER1)" >> $GITHUB_WORKSPACE/firmware/info.txt
+          
+          # 列出固件
+          ls -lh $GITHUB_WORKSPACE/firmware/
+
+      # ==================== 上传固件 ====================
+      - name: Upload Firmware
+        if: ${{ github.event.inputs.TEST != 'true' }}
+        uses: actions/upload-artifact@main
+        with:
+          name: JDC-ER1-Firmware-${{ env.WRT_DATE }}
+          path: |
+            firmware/
+          retention-days: 7
+
+      # ==================== 发布 Release ====================
+      - name: Release Firmware
+        if: ${{ github.event.inputs.TEST != 'true' && github.ref == 'refs/heads/main' }}
+        uses: softprops/action-gh-release@master
+        with:
+          tag_name: JDC-ER1-${{ env.WRT_DATE }}
+          name: JDC-ER1 ${{ env.WRT_DATE }}
+          body: |
+            ## 京东云 ER1 (RE-CS-07) 固件
+            
+            **编译时间:** ${{ env.WRT_DATE }}
+            **源码:** VIKINGYFY/immortalwrt
+            **分支:** ${{ github.event.inputs.BRANCH || 'main' }}
+            **提交:** ${{ env.WRT_HASH }}
+            **目标平台:** qualcommax/ipq60xx
+            
+            ### 默认配置
+            - IP: 192.168.10.1
+            - 主机名: JDC-ER1
+            - 主题: Aurora
+            
+            ### 主要功能
+            - HomeProxy 科学上网
+            - NSS 硬件加速
+            - SQM QoS
+            - Samba4 文件共享
+            - Tailscale 内网穿透
+            - USB 网络共享支持
+            
+            ### 安装说明
+            1. 通过 U-Boot TFTP 刷入
+            2. 或使用 sysupgrade 命令升级
+            
+            **注意:** 首次刷机请使用 factory 固件，升级使用 sysupgrade 固件
+          files: |
+            firmware/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ==================== 仅测试配置 ====================
+      - name: Test Config Only
+        if: ${{ github.event.inputs.TEST == 'true' }}
+        run: |
+          cd ./wrt/
+          echo "===== 配置文件内容 ====="
+          cat .config | grep -E "^(CONFIG_TARGET|CONFIG_PACKAGE|# CONFIG)" | head -100
+          echo "..."
+          echo "===== 设备选择 ====="
+          cat .config | grep "CONFIG_TARGET.*DEVICE"

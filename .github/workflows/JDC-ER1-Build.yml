@@ -129,4 +129,13 @@ make -j2 || make -j1 V=s
 if: ${{ github.event.inputs.TEST != 'true' }}
 run: |
 cd ./wrt/
-mkdir -p $GITHUB_WORKSPACE/firmware
+mkdir -p $GITHUB_WORKSPACE/firmware find bin/targets/qualcommax/ipq60xx -type f \( -name "*jdcloud*re-cs-07*" -o -name "*qualcommax*" \) -exec cp {} $GITHUB_WORKSPACE/firmware/ \;
+cp .config $GITHUB_WORKSPACE/firmware/config.txt
+
+- name: Upload Firmware
+if: ${{ github.event.inputs.TEST != 'true' }}
+uses: actions/upload-artifact@main
+with:
+name: JDC-ER1-Firmware-${{ env.WRT_DATE }}
+path: firmware/
+retention-days: 7
